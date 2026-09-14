@@ -1,645 +1,760 @@
-import base64
-import html
 import json
-from pathlib import Path
-
 import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Bunny Chinese",
+    page_title="Myra & Matthew learning Chinese",
     page_icon="🐰",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-BASE_DIR = Path(__file__).resolve().parent
-ASSET_DIR = BASE_DIR / "assets"
-
-
-def image_to_data_uri(filename: str) -> str:
-    path = ASSET_DIR / filename
-    if not path.exists():
-        return ""
-    mime = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
-    encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
-    return f"data:{mime};base64,{encoded}"
-
-
-SECTIONS = [
-    {
-        "id": "morning",
-        "emoji": "☀️",
-        "title": "ตอนเช้า",
-        "subtitle": "Morning routine",
-        "tone": "cream",
-        "items": [
-            {"hanzi": "吃饭", "pinyin": "chī fàn", "thai": "กินข้าว", "image": "eat.png"},
-            {"hanzi": "洗手", "pinyin": "xǐ shǒu", "thai": "ล้างมือ", "image": "wash.png"},
-            {"hanzi": "刷牙", "pinyin": "shuā yá", "thai": "แปรงฟัน", "image": "brush.png"},
-            {"hanzi": "洗澡", "pinyin": "xǐ zǎo", "thai": "อาบน้ำ", "image": "bath.png"},
-        ],
-    },
-    {
-        "id": "school",
-        "emoji": "🏫",
-        "title": "ไปโรงเรียน",
-        "subtitle": "School time",
-        "tone": "blue",
-        "items": [
-            {"hanzi": "去学校", "pinyin": "qù xuéxiào", "thai": "ไปโรงเรียน", "image": "school.png"},
-            {"hanzi": "老师", "pinyin": "lǎoshī", "thai": "คุณครู", "image": "teacher.png"},
-            {"hanzi": "见朋友", "pinyin": "jiàn péngyou", "thai": "เจอเพื่อน", "image": "friends.png"},
-            {"hanzi": "你", "pinyin": "nǐ", "thai": "หนู / เธอ / คุณ", "image": "you.png"},
-        ],
-    },
-    {
-        "id": "travel",
-        "emoji": "🚗",
-        "title": "เดินทาง",
-        "subtitle": "Getting around",
-        "tone": "peach",
-        "items": [
-            {"hanzi": "坐车", "pinyin": "zuò chē", "thai": "นั่งรถ", "image": "ridecar.png"},
-            {
-                "hanzi": "妈妈送你去学校",
-                "pinyin": "māma sòng nǐ qù xuéxiào",
-                "thai": "คุณแม่ไปส่งหนูที่โรงเรียน",
-                "image": "momcar.png",
-                "wide": True,
-            },
-            {
-                "hanzi": "爸爸送你去学校",
-                "pinyin": "bàba sòng nǐ qù xuéxiào",
-                "thai": "คุณพ่อไปส่งหนูที่โรงเรียน",
-                "image": "dadcar.png",
-                "wide": True,
-            },
-            {
-                "hanzi": "外公去学校接你",
-                "pinyin": "wàigōng qù xuéxiào jiē nǐ",
-                "thai": "คุณตาไปรับหนูที่โรงเรียน",
-                "image": "grandpa.png",
-                "wide": True,
-            },
-        ],
-    },
-    {
-        "id": "home",
-        "emoji": "🌙",
-        "title": "กลับบ้านและก่อนนอน",
-        "subtitle": "Home & bedtime",
-        "tone": "sage",
-        "items": [
-            {"hanzi": "上楼", "pinyin": "shàng lóu", "thai": "ขึ้นข้างบน / ขึ้นชั้นบน", "image": "upstairs.png"},
-            {"hanzi": "睡觉", "pinyin": "shuì jiào", "thai": "เข้านอน / นอน", "image": "sleep.png"},
-            {"hanzi": "关窗户", "pinyin": "guān chuānghu", "thai": "ปิดหน้าต่าง", "image": "window.png"},
-        ],
-    },
+# แต่ละคำ: จีน | พินอิน | ไทย | ภาพสัญลักษณ์
+CONTENT = [
+    ("ทักทาย", "👋", """
+你好|nǐ hǎo|สวัสดี|👋;再见|zài jiàn|ลาก่อน|👋;谢谢|xièxie|ขอบคุณ|🙏;不客气|bú kèqi|ไม่ต้องเกรงใจ|😊;对不起|duìbuqǐ|ขอโทษ|🙇;没关系|méi guānxi|ไม่เป็นไร|🤗;请|qǐng|เชิญ|🤲
+"""),
+    ("ครอบครัว", "🏡", """
+爸爸|bàba|พ่อ|👨;妈妈|māma|แม่|👩;哥哥|gēge|พี่ชาย|👦;姐姐|jiějie|พี่สาว|👧;弟弟|dìdi|น้องชาย|👶;妹妹|mèimei|น้องสาว|👶;爷爷|yéye|ปู่|👴;奶奶|nǎinai|ย่า|👵;外公|wàigōng|ตา|👴;外婆|wàipó|ยาย|👵
+"""),
+    ("ตัวเลข", "🔢", """
+一|yī|หนึ่ง|1️⃣;二|èr|สอง|2️⃣;三|sān|สาม|3️⃣;四|sì|สี่|4️⃣;五|wǔ|ห้า|5️⃣;六|liù|หก|6️⃣;七|qī|เจ็ด|7️⃣;八|bā|แปด|8️⃣;九|jiǔ|เก้า|9️⃣;十|shí|สิบ|🔟
+"""),
+    ("สีสัน", "🎨", """
+红色|hóngsè|สีแดง|🔴;黄色|huángsè|สีเหลือง|🟡;蓝色|lánsè|สีน้ำเงิน|🔵;绿色|lǜsè|สีเขียว|🟢;白色|báisè|สีขาว|⚪;黑色|hēisè|สีดำ|⚫;粉色|fěnsè|สีชมพู|🩷;紫色|zǐsè|สีม่วง|🟣;橙色|chéngsè|สีส้ม|🟠
+"""),
+    ("ร่างกาย", "🖐️", """
+头|tóu|ศีรษะ|🧒;头发|tóufa|ผม|👩;眼睛|yǎnjing|ตา|👀;耳朵|ěrduo|หู|👂;鼻子|bízi|จมูก|👃;嘴巴|zuǐba|ปาก|👄;手|shǒu|มือ|🖐️;脚|jiǎo|เท้า|🦶;肚子|dùzi|ท้อง|🧍
+"""),
+    ("สัตว์", "🐰", """
+狗|gǒu|สุนัข|🐶;猫|māo|แมว|🐱;兔子|tùzi|กระต่าย|🐰;鸟|niǎo|นก|🐦;鱼|yú|ปลา|🐟;鸭子|yāzi|เป็ด|🦆;大象|dàxiàng|ช้าง|🐘;老虎|lǎohǔ|เสือ|🐯;狮子|shīzi|สิงโต|🦁;熊猫|xióngmāo|แพนด้า|🐼
+"""),
+    ("ผลไม้", "🍎", """
+苹果|píngguǒ|แอปเปิล|🍎;香蕉|xiāngjiāo|กล้วย|🍌;西瓜|xīguā|แตงโม|🍉;橙子|chéngzi|ส้ม|🍊;葡萄|pútao|องุ่น|🍇;草莓|cǎoméi|สตรอว์เบอร์รี|🍓;芒果|mángguǒ|มะม่วง|🥭;菠萝|bōluó|สับปะรด|🍍
+"""),
+    ("อาหาร", "🍚", """
+饭|fàn|ข้าว|🍚;面条|miàntiáo|บะหมี่|🍜;面包|miànbāo|ขนมปัง|🍞;鸡蛋|jīdàn|ไข่ไก่|🥚;牛奶|niúnǎi|นมวัว|🥛;水|shuǐ|น้ำ|💧;果汁|guǒzhī|น้ำผลไม้|🧃;糖果|tángguǒ|ลูกอม|🍬;蛋糕|dàngāo|เค้ก|🍰
+"""),
+    ("ของเล่น–ของใช้", "🧸", """
+玩具|wánjù|ของเล่น|🧸;球|qiú|ลูกบอล|⚽;娃娃|wáwa|ตุ๊กตา|🪆;积木|jīmù|ตัวต่อ|🧱;书|shū|หนังสือ|📖;笔|bǐ|ปากกาหรือดินสอ|✏️;书包|shūbāo|กระเป๋านักเรียน|🎒;桌子|zhuōzi|โต๊ะ|🪑;椅子|yǐzi|เก้าอี้|🪑
+"""),
+    ("การกระทำ", "🏃", """
+吃|chī|กิน|🍽️;喝|hē|ดื่ม|🥛;看|kàn|ดู|👀;听|tīng|ฟัง|👂;说|shuō|พูด|💬;走|zǒu|เดิน|🚶;跑|pǎo|วิ่ง|🏃;跳|tiào|กระโดด|🦘;坐|zuò|นั่ง|🧘;睡觉|shuìjiào|นอนหลับ|😴;玩|wán|เล่น|🧸
+"""),
+    ("ความรู้สึก", "😊", """
+开心|kāixīn|มีความสุข|😄;难过|nánguò|เศร้า|😢;生气|shēngqì|โกรธ|😠;害怕|hàipà|กลัว|😨;累|lèi|เหนื่อย|😮‍💨;饿|è|หิว|🍽️;渴|kě|กระหายน้ำ|💧
+"""),
+    ("ธรรมชาติ", "🌷", """
+太阳|tàiyáng|ดวงอาทิตย์|☀️;月亮|yuèliang|ดวงจันทร์|🌙;星星|xīngxing|ดาว|⭐;天空|tiānkōng|ท้องฟ้า|🌤️;云|yún|เมฆ|☁️;雨|yǔ|ฝน|🌧️;花|huā|ดอกไม้|🌷;树|shù|ต้นไม้|🌳
+"""),
+    ("โรงเรียน", "🏫", """
+学校|xuéxiào|โรงเรียน|🏫;老师|lǎoshī|คุณครู|👩‍🏫;学生|xuésheng|นักเรียน|🧑‍🎓;朋友|péngyou|เพื่อน|🧒;教室|jiàoshì|ห้องเรียน|🏫;书包|shūbāo|กระเป๋านักเรียน|🎒;铅笔|qiānbǐ|ดินสอ|✏️;橡皮|xiàngpí|ยางลบ|▰;尺子|chǐzi|ไม้บรรทัด|📏;书|shū|หนังสือ|📖;画画|huà huà|วาดรูป|🎨;唱歌|chàng gē|ร้องเพลง|🎵;洗手|xǐ shǒu|ล้างมือ|🧼;上学|shàng xué|ไปโรงเรียน|🏫
+"""),
+    ("ประโยคสั้น", "💬", """
+我爱妈妈。|Wǒ ài māma.|หนูรักแม่|💗;这是小猫。|Zhè shì xiǎo māo.|นี่คือแมวน้อย|🐱;我要喝水。|Wǒ yào hē shuǐ.|หนูอยากดื่มน้ำ|💧;我喜欢苹果。|Wǒ xǐhuan píngguǒ.|หนูชอบแอปเปิล|🍎;我很开心。|Wǒ hěn kāixīn.|หนูมีความสุข|😄;红色的球。|Hóngsè de qiú.|ลูกบอลสีแดง|🔴;谢谢妈妈！|Xièxie māma!|ขอบคุณแม่|🙏
+"""),
 ]
 
+categories = []
 
-def make_card(item: dict) -> str:
-    hanzi = html.escape(item["hanzi"])
-    pinyin = html.escape(item["pinyin"])
-    thai = html.escape(item["thai"])
-    img_uri = image_to_data_uri(item["image"])
-    wide_class = " wide" if item.get("wide") else ""
-    js_text = json.dumps(item["hanzi"], ensure_ascii=False)
+for name, icon, text in CONTENT:
+    items = []
 
-    if img_uri:
-        picture = f'<img class="card-image" src="{img_uri}" alt="{hanzi}">'
-    else:
-        picture = '<div class="fallback-bunny">🐰</div>'
+    for row in text.strip().split(";"):
+        zh, pinyin, th, picture = row.strip().split("|")
 
-    return f"""
-    <article class="word-card{wide_class}">
-        <div class="art-wrap">
-            {picture}
-        </div>
-        <button
-            class="hanzi-button"
-            onclick='speakChinese({js_text}, this)'
-            aria-label="ฟังเสียง {hanzi}"
-        >{hanzi}</button>
-        <div class="pinyin">{pinyin}</div>
-        <div class="thai">{thai}</div>
-    </article>
-    """
+        items.append({
+            "zh": zh,
+            "pinyin": pinyin,
+            "th": th,
+            "icon": picture,
+        })
 
+    categories.append({
+        "name": name,
+        "icon": icon,
+        "items": items,
+    })
 
-section_html = []
-for section in SECTIONS:
-    cards = "".join(make_card(item) for item in section["items"])
-    section_html.append(
-        f"""
-        <section class="lesson-section {section["tone"]}" id="{section["id"]}">
-            <div class="section-title-row">
-                <div class="section-icon">{section["emoji"]}</div>
-                <div>
-                    <h2>{html.escape(section["title"])}</h2>
-                    <p>{html.escape(section["subtitle"])}</p>
-                </div>
-            </div>
-            <div class="card-grid">
-                {cards}
-            </div>
-        </section>
-        """
-    )
 
-hero_uri = image_to_data_uri("hero.png")
-
-app_html = f"""
-<!doctype html>
-<html lang="th">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>
-    :root {{
-        color-scheme: light;
-        --ink: #5b4542;
-        --muted: #8d7d78;
-        --pink: #f7cbd7;
-        --pink-strong: #e98cab;
-        --cream: #fff8ee;
-        --peach: #fff0e6;
-        --sage: #edf5ee;
-        --blue: #eef6fb;
-        --lav: #f2eff9;
-        --line: rgba(141, 113, 105, 0.15);
-        --shadow: 0 10px 28px rgba(113, 86, 78, 0.10);
-    }}
-
-    * {{
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }}
-
-    html, body {{
-        margin: 0;
-        padding: 0;
-        background: #fffaf6;
-        color: var(--ink);
-        font-family:
-            "Noto Sans Thai", "Noto Sans SC", "PingFang SC",
-            "Microsoft YaHei", system-ui, -apple-system, sans-serif;
-        overflow-x: hidden;
-    }}
-
-    body {{
-        width: 100%;
-    }}
-
-    button {{
-        font: inherit;
-    }}
-
-    .phone {{
-        width: 100%;
-        max-width: 430px;
-        margin: 0 auto;
-        min-height: 100vh;
-        padding: 10px 10px 30px;
-        background:
-            radial-gradient(circle at 12% 3%, rgba(247,203,215,.38), transparent 23%),
-            radial-gradient(circle at 92% 7%, rgba(205,226,210,.42), transparent 22%),
-            #fffaf6;
-    }}
-
-    .hero {{
-        position: relative;
-        overflow: hidden;
-        border-radius: 28px;
-        padding: 16px 16px 14px;
-        background: linear-gradient(135deg, #fff7ef 0%, #fffafb 50%, #f1f7f0 100%);
-        border: 1px solid rgba(222,190,179,.55);
-        box-shadow: var(--shadow);
-    }}
-
-    .hero-top {{
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }}
-
-    .hero img {{
-        width: 88px;
-        height: 82px;
-        object-fit: cover;
-        border-radius: 22px;
-        border: 2px solid rgba(255,255,255,.9);
-        box-shadow: 0 7px 20px rgba(112,86,80,.10);
-        flex: 0 0 auto;
-    }}
-
-    .hero h1 {{
-        margin: 0;
-        font-family: Georgia, "Times New Roman", serif;
-        font-size: 31px;
-        line-height: 1.02;
-        letter-spacing: -.4px;
-        color: #5a3f3d;
-    }}
-
-    .hero .sub {{
-        margin: 5px 0 0;
-        color: #7f706b;
-        font-size: 13.5px;
-        line-height: 1.45;
-    }}
-
-    .tap-note {{
-        margin-top: 13px;
-        border-radius: 18px;
-        padding: 11px 12px;
-        text-align: center;
-        background: linear-gradient(90deg, #fde4ec, #fff5f7);
-        color: #9b5870;
-        font-size: 13px;
-        font-weight: 700;
-        border: 1px solid rgba(233,140,171,.22);
-    }}
-
-    .chips {{
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding: 12px 1px 4px;
-        scrollbar-width: none;
-    }}
-
-    .chips::-webkit-scrollbar {{
-        display: none;
-    }}
-
-    .chip {{
-        flex: 0 0 auto;
-        text-decoration: none;
-        color: #6f5c58;
-        background: #fff;
-        border: 1px solid rgba(180,150,141,.18);
-        box-shadow: 0 4px 14px rgba(98,74,67,.07);
-        padding: 8px 12px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 800;
-    }}
-
-    .lesson-section {{
-        margin-top: 12px;
-        border-radius: 27px;
-        padding: 13px 11px 14px;
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow);
-    }}
-
-    .lesson-section.cream {{ background: linear-gradient(180deg,#fff9ef,#fffdf9); }}
-    .lesson-section.blue  {{ background: linear-gradient(180deg,#eef8fb,#fbfdff); }}
-    .lesson-section.peach {{ background: linear-gradient(180deg,#fff1e7,#fffaf7); }}
-    .lesson-section.sage  {{ background: linear-gradient(180deg,#eef6ef,#fbfdf9); }}
-
-    .section-title-row {{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 1px 3px 10px;
-    }}
-
-    .section-icon {{
-        width: 42px;
-        height: 42px;
-        display: grid;
-        place-items: center;
-        border-radius: 15px;
-        background: rgba(255,255,255,.74);
-        border: 1px solid rgba(255,255,255,.85);
-        font-size: 23px;
-        box-shadow: 0 5px 16px rgba(104,82,75,.08);
-    }}
-
-    .section-title-row h2 {{
-        margin: 0;
-        font-size: 20px;
-        line-height: 1.05;
-        color: #604946;
-    }}
-
-    .section-title-row p {{
-        margin: 3px 0 0;
-        font-size: 11.5px;
-        color: #95827d;
-    }}
-
-    .card-grid {{
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 9px;
-    }}
-
-    .word-card {{
-        min-width: 0;
-        overflow: hidden;
-        border-radius: 22px;
-        background: rgba(255,255,255,.90);
-        border: 1px solid rgba(183,151,143,.16);
-        box-shadow: 0 7px 18px rgba(98,77,71,.07);
-        padding: 7px 7px 11px;
-        text-align: center;
-    }}
-
-    .word-card.wide {{
-        grid-column: 1 / -1;
-        display: grid;
-        grid-template-columns: 41% 59%;
-        grid-template-areas:
-            "art hanzi"
-            "art pinyin"
-            "art thai";
-        align-items: center;
-        gap: 0 8px;
-        padding: 8px;
-        text-align: left;
-    }}
-
-    .art-wrap {{
-        width: 100%;
-        border-radius: 17px;
-        overflow: hidden;
-        background: #fff6ef;
-    }}
-
-    .word-card.wide .art-wrap {{
-        grid-area: art;
-        height: 130px;
-    }}
-
-    .card-image {{
-        display: block;
-        width: 100%;
-        height: 118px;
-        object-fit: cover;
-    }}
-
-    .wide .card-image {{
-        height: 130px;
-    }}
-
-    .fallback-bunny {{
-        height: 118px;
-        display: grid;
-        place-items: center;
-        font-size: 56px;
-        background: linear-gradient(135deg,#fff1e8,#edf6ef);
-    }}
-
-    .hanzi-button {{
-        appearance: none;
-        -webkit-appearance: none;
-        width: 100%;
-        margin: 7px 0 0;
-        padding: 7px 5px 6px;
-        border: 1.5px solid rgba(229,134,166,.36);
-        border-radius: 15px;
-        background: linear-gradient(180deg,#fff9fb,#fdebf1);
-        color: #5c403f;
-        font-family:
-            "Noto Sans SC","PingFang SC","Microsoft YaHei",
-            system-ui, sans-serif;
-        font-size: 27px;
-        font-weight: 800;
-        line-height: 1.18;
-        cursor: pointer;
-        box-shadow:
-            0 4px 12px rgba(216,125,155,.09),
-            inset 0 0 0 1px rgba(255,255,255,.8);
-        transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
-        outline: none;
-    }}
-
-    .hanzi-button:active,
-    .hanzi-button.playing {{
-        transform: scale(.97);
-        background: linear-gradient(180deg,#fde4ec,#f9d7e3);
-        box-shadow: 0 2px 8px rgba(210,120,152,.14);
-        color: #6a4149;
-    }}
-
-    .hanzi-button:focus-visible {{
-        outline: 3px solid rgba(235,145,176,.25);
-        outline-offset: 2px;
-    }}
-
-    .wide .hanzi-button {{
-        grid-area: hanzi;
-        margin: 0;
-        text-align: center;
-        font-size: 23px;
-        padding: 10px 8px;
-    }}
-
-    .pinyin {{
-        margin-top: 4px;
-        font-size: 13px;
-        color: #7a6e79;
-        line-height: 1.25;
-    }}
-
-    .thai {{
-        margin-top: 3px;
-        font-size: 12.5px;
-        color: #8a7772;
-        line-height: 1.3;
-    }}
-
-    .wide .pinyin {{
-        grid-area: pinyin;
-        text-align: center;
-        font-size: 12.5px;
-        padding: 3px 4px 0;
-        margin-top: 0;
-    }}
-
-    .wide .thai {{
-        grid-area: thai;
-        text-align: center;
-        font-size: 12px;
-        padding: 3px 4px 0;
-        margin-top: 0;
-    }}
-
-    .parent-tip {{
-        margin-top: 13px;
-        border-radius: 24px;
-        padding: 15px 15px 14px;
-        background: linear-gradient(135deg,#f5eff8,#fff8f2);
-        border: 1px solid rgba(170,145,182,.16);
-        box-shadow: var(--shadow);
-    }}
-
-    .parent-tip h3 {{
-        margin: 0 0 8px;
-        font-size: 16px;
-        color: #67535f;
-    }}
-
-    .parent-tip p {{
-        margin: 0;
-        font-size: 12.5px;
-        line-height: 1.55;
-        color: #84757b;
-    }}
-
-    .footer {{
-        padding: 18px 8px 8px;
-        text-align: center;
-        color: #a07985;
-        font-family: Georgia, "Times New Roman", serif;
-        font-style: italic;
-        font-size: 14px;
-    }}
-
-    @media (max-width: 360px) {{
-        .phone {{ padding-left: 7px; padding-right: 7px; }}
-        .hero h1 {{ font-size: 27px; }}
-        .hanzi-button {{ font-size: 24px; }}
-        .wide .hanzi-button {{ font-size: 20px; }}
-        .card-grid {{ gap: 7px; }}
-    }}
-</style>
-</head>
-<body>
-<main class="phone">
-    <header class="hero">
-        <div class="hero-top">
-            <img src="{hero_uri}" alt="กระต่ายน้อยอ่านหนังสือ">
-            <div>
-                <h1>Bunny Chinese</h1>
-                <div class="sub">ภาษาจีนในชีวิตประจำวัน<br>สำหรับเด็ก 2–5 ขวบ</div>
-            </div>
-        </div>
-        <div class="tap-note">👆 แตะที่ “ตัวอักษรจีน” เพื่อฟังเสียง — ไม่มีปุ่มลำโพง</div>
-    </header>
-
-    <nav class="chips" aria-label="หมวดบทเรียน">
-        <a class="chip" href="#morning">☀️ ตอนเช้า</a>
-        <a class="chip" href="#school">🏫 โรงเรียน</a>
-        <a class="chip" href="#travel">🚗 เดินทาง</a>
-        <a class="chip" href="#home">🌙 ก่อนนอน</a>
-    </nav>
-
-    {''.join(section_html)}
-
-    <aside class="parent-tip">
-        <h3>🌷 วิธีใช้กับเด็กเล็ก</h3>
-        <p>
-            รอบแรกให้เด็กดูภาพและแตะคำจีนเพื่อฟังเสียง 1–2 ครั้ง
-            จากนั้นผู้ปกครองพูดซ้ำในสถานการณ์จริง เช่น ก่อนล้างมือให้แตะ
-            “洗手” แล้วพาไปล้างมือทันที เด็กวัยนี้จะจำคำได้ง่ายขึ้นเมื่อ
-            “เสียง + ภาพ + เหตุการณ์จริง” เกิดพร้อมกัน
-        </p>
-    </aside>
-
-    <div class="footer">Little words • happy routines • growing together 🐰</div>
-</main>
-
-<script>
-    let chineseVoices = [];
-
-    function loadVoices() {{
-        chineseVoices = window.speechSynthesis
-            .getVoices()
-            .filter(v => (v.lang || "").toLowerCase().startsWith("zh"));
-    }}
-
-    loadVoices();
-    if ("speechSynthesis" in window) {{
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-    }}
-
-    function speakChinese(text, element) {{
-        if (!("speechSynthesis" in window)) {{
-            return;
-        }}
-
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "zh-CN";
-        utterance.rate = 0.72;
-        utterance.pitch = 1.05;
-        utterance.volume = 1.0;
-
-        const preferred =
-            chineseVoices.find(v => (v.lang || "").toLowerCase() === "zh-cn") ||
-            chineseVoices.find(v => (v.lang || "").toLowerCase() === "zh-tw") ||
-            chineseVoices[0];
-
-        if (preferred) {{
-            utterance.voice = preferred;
-        }}
-
-        document.querySelectorAll(".hanzi-button.playing")
-            .forEach(el => el.classList.remove("playing"));
-
-        element.classList.add("playing");
-
-        utterance.onend = () => element.classList.remove("playing");
-        utterance.onerror = () => element.classList.remove("playing");
-
-        window.speechSynthesis.speak(utterance);
-    }}
-
-    function reportHeight() {{
-        const height = Math.ceil(document.documentElement.scrollHeight);
-        window.parent.postMessage({{
-            isStreamlitMessage: true,
-            type: "streamlit:setFrameHeight",
-            height: height
-        }}, "*");
-    }}
-
-    window.addEventListener("load", () => {{
-        setTimeout(reportHeight, 80);
-        setTimeout(reportHeight, 400);
-        setTimeout(reportHeight, 1000);
-    }});
-
-    new ResizeObserver(reportHeight).observe(document.body);
-</script>
-</body>
-</html>
-"""
-
+# ตรึงพื้นที่แอปเท่าความสูงหน้าจอ
+# ให้เลื่อนเฉพาะรายการคำศัพท์ด้านใน
 st.markdown(
     """
     <style>
-        html, body, [data-testid="stAppViewContainer"], .stApp {
-            background: #fffaf6 !important;
-        }
+    [data-testid="stHeader"] {
+        display: none;
+    }
 
-        [data-testid="stHeader"],
-        [data-testid="stToolbar"],
-        #MainMenu,
-        footer {
-            display: none !important;
-        }
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"] {
+        overflow: hidden !important;
+    }
 
-        .block-container {
-            width: 100% !important;
-            max-width: 430px !important;
-            padding: 0 !important;
-            margin: 0 auto !important;
-        }
+    .block-container {
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
 
-        iframe {
-            border: 0 !important;
-            width: 100% !important;
-        }
+    iframe[title="streamlit.components.v1.html"] {
+        width: 100% !important;
+        height: 100dvh !important;
+        border: 0;
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-components.html(app_html, height=3600, scrolling=False)
+
+PAGE = r"""
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: Tahoma, Arial, sans-serif;
+    color: #48525e;
+    background: #fffdf8;
+}
+
+.app {
+    height: 100vh;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+}
+
+header {
+    padding: 12px 16px 8px;
+    background: #fffdf8;
+    border-bottom: 1px solid #e6e2ec;
+}
+
+.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+h1 {
+    font-size: 18px;
+    margin: 0;
+    color: #8970a8;
+    line-height: 1.4;
+}
+
+h1 small {
+    display: block;
+    font-size: 13px;
+    color: #558772;
+    font-weight: normal;
+}
+
+button, select {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+button:focus-visible,
+select:focus-visible {
+    outline: 3px solid #766198;
+    outline-offset: 2px;
+}
+
+.stop {
+    border: 0;
+    border-radius: 12px;
+    background: #ffe2d7;
+    padding: 10px 14px;
+    white-space: nowrap;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 10px;
+}
+
+nav button {
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 8px 11px;
+    font-size: 13px;
+    background: #eee6f8;
+    min-height: 36px;
+}
+
+nav button:nth-child(3n+2) {
+    background: #e0f1e7;
+}
+
+nav button:nth-child(3n+3) {
+    background: #ffe8db;
+}
+
+nav button[aria-pressed="true"] {
+    border: 2px solid #796298;
+    padding: 7px 10px;
+    font-weight: bold;
+}
+
+details {
+    font-size: 12px;
+    margin-top: 8px;
+    max-height: 32vh;
+    overflow: auto;
+}
+
+summary {
+    cursor: pointer;
+    padding: 5px 0;
+}
+
+.settings {
+    padding: 8px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+select {
+    max-width: 100%;
+    padding: 8px;
+    border: 1px solid #c9bbdc;
+    border-radius: 10px;
+    background: white;
+}
+
+#voiceSelect {
+    width: min(100%, 420px);
+}
+
+#voiceNote {
+    line-height: 1.6;
+    margin: 4px 0;
+}
+
+#status {
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 6px 0 0;
+    min-height: 18px;
+}
+
+main {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 18px;
+    min-height: 0;
+}
+
+.content {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+h2 {
+    font-size: 21px;
+    margin: 0 0 4px;
+}
+
+.hint {
+    font-size: 13px;
+    margin: 0 0 16px;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.card {
+    border: 2px solid white;
+    border-radius: 24px;
+    padding: 20px 8px;
+    background: #e9e0f7;
+    min-width: 0;
+    box-shadow: 0 4px 12px #00000007;
+}
+
+.card:nth-child(3n+2) {
+    background: #ffe2d7;
+}
+
+.card:nth-child(3n+3) {
+    background: #dff0ff;
+}
+
+.card.active {
+    outline: 3px solid #65ad91;
+    outline-offset: -3px;
+}
+
+.card:hover {
+    filter: brightness(.98);
+}
+
+.card span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.picture {
+    font-size: 58px;
+    margin-bottom: 12px;
+}
+
+.zh {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 32px;
+    line-height: 1.5;
+}
+
+.pinyin {
+    font: 17px Arial, sans-serif;
+    margin: 8px 0;
+}
+
+.th {
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+.listen {
+    font-size: 12px;
+    margin-top: 10px;
+    color: #586b60;
+}
+
+footer {
+    text-align: center;
+    padding: 24px 0 8px;
+    font-size: 13px;
+    color: #647969;
+}
+
+@media (max-width: 540px) {
+    header {
+        padding: 10px 10px 6px;
+    }
+
+    h1 {
+        font-size: 16px;
+    }
+
+    nav {
+        gap: 5px;
+    }
+
+    nav button {
+        font-size: 12px;
+        padding: 7px 9px;
+    }
+
+    nav button[aria-pressed="true"] {
+        padding: 6px 8px;
+    }
+
+    main {
+        padding: 14px 10px;
+    }
+
+    .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .picture {
+        font-size: 48px;
+    }
+
+    .zh {
+        font-size: 27px;
+    }
+
+    .pinyin, .th {
+        font-size: 15px;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+    <div class="top">
+        <h1>
+            🐰 Myra &amp; Matthew
+            <small>learning Chinese</small>
+        </h1>
+
+        <button class="stop" id="stop">
+            ⏹ หยุดเสียง
+        </button>
+    </div>
+
+    <nav id="nav" aria-label="หมวดคำศัพท์"></nav>
+
+    <details id="settings">
+        <summary>⚙️ ตั้งค่าเสียง</summary>
+
+        <div class="settings">
+            <label for="voiceSelect">เสียงจีน</label>
+            <select id="voiceSelect"></select>
+
+            <label for="speed">ความเร็ว</label>
+            <select id="speed">
+                <option value="0.65">ช้า</option>
+                <option value="0.8" selected>ช้าปานกลาง</option>
+                <option value="1">ปกติ</option>
+            </select>
+
+            <button class="stop" id="testVoice">
+                ทดสอบเสียง
+            </button>
+
+            <button class="stop" id="refreshVoices">
+                โหลดรายชื่อเสียงใหม่
+            </button>
+        </div>
+
+        <p id="voiceNote"></p>
+    </details>
+
+    <p id="status" role="status" aria-live="polite">
+        แตะภาพเพื่อฟังภาษาจีน
+    </p>
+</header>
+
+<main id="scrollArea">
+    <div class="content">
+        <h2 id="heading"></h2>
+
+        <p class="hint">
+            แตะภาพเพื่อฟัง แล้วพูดภาษาจีนตามได้เลย
+        </p>
+
+        <div id="cards" class="cards"></div>
+
+        <footer>
+            🌷 เรียนวันละนิดกับกระต่ายน้อย 🌷
+        </footer>
+    </div>
+</main>
+
+</div>
+
+<script>
+const DATA = __DATA__;
+const $ = id => document.getElementById(id);
+const synth = window.speechSynthesis;
+
+let voices = [];
+let token = 0;
+let utterance = null;
+let activeCard = null;
+let savedVoice = "";
+
+try {
+    savedVoice = localStorage.getItem("bunnyChineseVoice") || "";
+} catch (e) {}
+
+
+// เลือกเฉพาะเสียงจีนกลาง ไม่เลือกเสียงไทยหรือกวางตุ้ง
+function isMandarin(voice) {
+    const lang = voice.lang.replaceAll("_", "-").toLowerCase();
+
+    return /^(zh$|zh-(cn|tw|sg|hans|hant)(-|$)|cmn)/.test(lang)
+        && !/(hk|yue)/.test(lang);
+}
+
+
+// เสียงผู้หญิงที่รู้จัก ให้เลือกก่อนเสียงอื่น
+function knownFemale(voice) {
+    return /xiaoxiao|xiaoyi|huihui|yaoyao|ting[- ]?ting|mei[- ]?jia|li[- ]?li/i
+        .test(voice.name);
+}
+
+
+function loadVoices() {
+    const select = $("voiceSelect");
+    const previous = select.value || savedVoice;
+
+    select.replaceChildren(
+        new Option("เลือกเสียงจีน…", "")
+    );
+
+    if (!synth) {
+        $("voiceNote").textContent =
+            "เบราว์เซอร์นี้ไม่รองรับเสียงอ่าน ลองเปิดด้วย Edge หรือ Chrome";
+        return;
+    }
+
+    voices = synth.getVoices().filter(isMandarin);
+
+    voices.sort(
+        (a, b) => Number(knownFemale(b)) - Number(knownFemale(a))
+    );
+
+    for (const voice of voices) {
+        select.add(
+            new Option(
+                voice.name + " · " + voice.lang,
+                voice.voiceURI
+            )
+        );
+    }
+
+    const chosen =
+        voices.find(v => v.voiceURI === previous)
+        || voices.find(knownFemale);
+
+    if (chosen) {
+        select.value = chosen.voiceURI;
+    }
+
+    $("voiceNote").textContent = !voices.length
+        ? "ยังไม่พบเสียงจีนกลาง ลองโหลดรายชื่อเสียงใหม่ หากยังไม่มี ให้เพิ่มเสียงจีนกลางในเครื่องแล้วเปิดเบราว์เซอร์ใหม่"
+        : "เลือกเสียงผู้หญิง เช่น Xiaoxiao, Huihui หรือ Tingting แล้วกดทดสอบเสียง";
+}
+
+
+function stopSpeech() {
+    token += 1;
+
+    if (synth) {
+        synth.cancel();
+    }
+
+    if (activeCard) {
+        activeCard.classList.remove("active");
+    }
+
+    activeCard = null;
+    utterance = null;
+}
+
+
+function speak(zh, card = null) {
+    stopSpeech();
+
+    if (!synth || !window.SpeechSynthesisUtterance) {
+        $("status").textContent =
+            "เบราว์เซอร์นี้ไม่รองรับเสียงอ่าน";
+        $("settings").open = true;
+        return;
+    }
+
+    loadVoices();
+
+    const voice = voices.find(
+        v => v.voiceURI === $("voiceSelect").value
+    );
+
+    if (!voice) {
+        $("status").textContent =
+            "กรุณาเลือกเสียงจีนในตั้งค่าเสียงก่อน แล้วแตะภาพอีกครั้ง";
+        $("settings").open = true;
+        return;
+    }
+
+    const current = token;
+
+    // ส่งเฉพาะคำภาษาจีนไปอ่าน
+    utterance = new SpeechSynthesisUtterance(zh);
+    utterance.lang = voice.lang;
+    utterance.voice = voice;
+    utterance.rate = Number($("speed").value);
+    utterance.pitch = 1;
+
+    activeCard = card;
+
+    if (card) {
+        card.classList.add("active");
+    }
+
+    $("status").textContent = "🔊 " + zh;
+
+    const finish = message => {
+        if (current !== token) {
+            return;
+        }
+
+        if (activeCard) {
+            activeCard.classList.remove("active");
+        }
+
+        activeCard = null;
+        utterance = null;
+        $("status").textContent = message;
+    };
+
+    utterance.onend = () => {
+        finish("⭐ เก่งมาก! แตะฟังซ้ำหรือเลือกคำต่อไป");
+    };
+
+    utterance.onerror = () => {
+        finish(
+            "เล่นเสียงไม่ได้ ลองเลือกเสียงจีนอื่นในตั้งค่าเสียงแล้วแตะอีกครั้ง"
+        );
+    };
+
+    try {
+        synth.speak(utterance);
+    } catch (e) {
+        finish("เปิดเสียงไม่ได้ กรุณาตรวจสอบตั้งค่าเสียง");
+    }
+}
+
+
+function addText(parent, text, className, lang) {
+    const span = document.createElement("span");
+
+    span.textContent = text;
+    span.className = className;
+
+    if (lang) {
+        span.lang = lang;
+    }
+
+    parent.appendChild(span);
+}
+
+
+function showCategory(index) {
+    stopSpeech();
+
+    const category = DATA[index];
+
+    $("heading").textContent =
+        category.icon + " " + category.name;
+
+    $("status").textContent = "แตะภาพเพื่อฟังภาษาจีน";
+
+    $("cards").replaceChildren();
+
+    [...$("nav").children].forEach((button, i) => {
+        button.setAttribute(
+            "aria-pressed",
+            String(i === index)
+        );
+    });
+
+    category.items.forEach(word => {
+        const button = document.createElement("button");
+
+        button.className = "card";
+
+        button.setAttribute(
+            "aria-label",
+            "ฟัง " + word.zh + " " + word.th
+        );
+
+        addText(button, word.icon, "picture");
+        addText(button, word.zh, "zh", "zh-CN");
+        addText(button, word.pinyin, "pinyin");
+        addText(button, word.th, "th", "th");
+        addText(button, "🔊 แตะเพื่อฟัง", "listen");
+
+        button.onclick = () => {
+            speak(word.zh, button);
+        };
+
+        $("cards").appendChild(button);
+    });
+
+    $("scrollArea").scrollTop = 0;
+}
+
+
+// สร้างปุ่ม navigation ขนาดเล็ก
+DATA.forEach((category, index) => {
+    const button = document.createElement("button");
+
+    button.textContent =
+        category.icon + " " + category.name;
+
+    button.onclick = () => {
+        showCategory(index);
+    };
+
+    $("nav").appendChild(button);
+});
+
+
+$("stop").onclick = () => {
+    stopSpeech();
+    $("status").textContent = "หยุดเสียงแล้ว";
+};
+
+
+$("voiceSelect").onchange = () => {
+    stopSpeech();
+
+    savedVoice = $("voiceSelect").value;
+
+    try {
+        localStorage.setItem(
+            "bunnyChineseVoice",
+            savedVoice
+        );
+    } catch (e) {}
+};
+
+
+$("testVoice").onclick = () => {
+    speak("你好");
+};
+
+
+$("refreshVoices").onclick = loadVoices;
+
+
+if (synth) {
+    synth.addEventListener("voiceschanged", loadVoices);
+}
+
+window.addEventListener("pagehide", stopSpeech);
+
+showCategory(0);
+loadVoices();
+</script>
+</body>
+</html>
+"""
+
+# ป้องกันข้อมูลถูกตีความเป็นแท็ก HTML ในสคริปต์
+payload = json.dumps(
+    categories,
+    ensure_ascii=False,
+).replace("<", "\\u003c")
+
+components.html(
+    PAGE.replace("__DATA__", payload),
+    height=800,
+    scrolling=False,
+)
