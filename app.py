@@ -1048,6 +1048,6 @@ payload = json.dumps(
 
 components.html(
     PAGE.replace("__DATA__", payload),
-    height=900,
+    height=800,
     scrolling=False,
 )
