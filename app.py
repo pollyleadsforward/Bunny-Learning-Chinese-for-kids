@@ -620,6 +620,17 @@ footer {
 /* Leave room for both sticky bars when scrolling to content. */
 .app {
     scroll-padding-top: 120px;
+}.element-container:has(
+    iframe[title="streamlit.components.v1.html"]
+) {
+    height: 100dvh !important;
+}
+
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+.stApp {
+    min-height: 100dvh !important;
+    background: #fffdf8 !important;
 }
 </style>
 </head>
@@ -1019,8 +1030,9 @@ payload = json.dumps(
     ensure_ascii=False,
 ).replace("<", "\\u003c")
 
+
 components.html(
     PAGE.replace("__DATA__", payload),
-    height=800,
+    height=1200,
     scrolling=False,
 )
