@@ -1,6 +1,8 @@
 import json
+
 import streamlit as st
 import streamlit.components.v1 as components
+
 
 st.set_page_config(
     page_title="Myra & Matthew learning Chinese",
@@ -9,64 +11,239 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# แต่ละคำ: จีน | พินอิน | ไทย | ภาพสัญลักษณ์
+
+# Chinese | Pinyin | English | Picture
 CONTENT = [
-    ("ทักทาย", "👋", """
-你好|nǐ hǎo|สวัสดี|👋;再见|zài jiàn|ลาก่อน|👋;谢谢|xièxie|ขอบคุณ|🙏;不客气|bú kèqi|ไม่ต้องเกรงใจ|😊;对不起|duìbuqǐ|ขอโทษ|🙇;没关系|méi guānxi|ไม่เป็นไร|🤗;请|qǐng|เชิญ|🤲
-"""),
-    ("ครอบครัว", "🏡", """
-爸爸|bàba|พ่อ|👨;妈妈|māma|แม่|👩;哥哥|gēge|พี่ชาย|👦;姐姐|jiějie|พี่สาว|👧;弟弟|dìdi|น้องชาย|👶;妹妹|mèimei|น้องสาว|👶;爷爷|yéye|ปู่|👴;奶奶|nǎinai|ย่า|👵;外公|wàigōng|ตา|👴;外婆|wàipó|ยาย|👵
-"""),
-    ("ตัวเลข", "🔢", """
-一|yī|หนึ่ง|1️⃣;二|èr|สอง|2️⃣;三|sān|สาม|3️⃣;四|sì|สี่|4️⃣;五|wǔ|ห้า|5️⃣;六|liù|หก|6️⃣;七|qī|เจ็ด|7️⃣;八|bā|แปด|8️⃣;九|jiǔ|เก้า|9️⃣;十|shí|สิบ|🔟
-"""),
-    ("สีสัน", "🎨", """
-红色|hóngsè|สีแดง|🔴;黄色|huángsè|สีเหลือง|🟡;蓝色|lánsè|สีน้ำเงิน|🔵;绿色|lǜsè|สีเขียว|🟢;白色|báisè|สีขาว|⚪;黑色|hēisè|สีดำ|⚫;粉色|fěnsè|สีชมพู|🩷;紫色|zǐsè|สีม่วง|🟣;橙色|chéngsè|สีส้ม|🟠
-"""),
-    ("ร่างกาย", "🖐️", """
-头|tóu|ศีรษะ|🧒;头发|tóufa|ผม|👩;眼睛|yǎnjing|ตา|👀;耳朵|ěrduo|หู|👂;鼻子|bízi|จมูก|👃;嘴巴|zuǐba|ปาก|👄;手|shǒu|มือ|🖐️;脚|jiǎo|เท้า|🦶;肚子|dùzi|ท้อง|🧍
-"""),
-    ("สัตว์", "🐰", """
-狗|gǒu|สุนัข|🐶;猫|māo|แมว|🐱;兔子|tùzi|กระต่าย|🐰;鸟|niǎo|นก|🐦;鱼|yú|ปลา|🐟;鸭子|yāzi|เป็ด|🦆;大象|dàxiàng|ช้าง|🐘;老虎|lǎohǔ|เสือ|🐯;狮子|shīzi|สิงโต|🦁;熊猫|xióngmāo|แพนด้า|🐼
-"""),
-    ("ผลไม้", "🍎", """
-苹果|píngguǒ|แอปเปิล|🍎;香蕉|xiāngjiāo|กล้วย|🍌;西瓜|xīguā|แตงโม|🍉;橙子|chéngzi|ส้ม|🍊;葡萄|pútao|องุ่น|🍇;草莓|cǎoméi|สตรอว์เบอร์รี|🍓;芒果|mángguǒ|มะม่วง|🥭;菠萝|bōluó|สับปะรด|🍍
-"""),
-    ("อาหาร", "🍚", """
-饭|fàn|ข้าว|🍚;面条|miàntiáo|บะหมี่|🍜;面包|miànbāo|ขนมปัง|🍞;鸡蛋|jīdàn|ไข่ไก่|🥚;牛奶|niúnǎi|นมวัว|🥛;水|shuǐ|น้ำ|💧;果汁|guǒzhī|น้ำผลไม้|🧃;糖果|tángguǒ|ลูกอม|🍬;蛋糕|dàngāo|เค้ก|🍰
-"""),
-    ("ของเล่น–ของใช้", "🧸", """
-玩具|wánjù|ของเล่น|🧸;球|qiú|ลูกบอล|⚽;娃娃|wáwa|ตุ๊กตา|🪆;积木|jīmù|ตัวต่อ|🧱;书|shū|หนังสือ|📖;笔|bǐ|ปากกาหรือดินสอ|✏️;书包|shūbāo|กระเป๋านักเรียน|🎒;桌子|zhuōzi|โต๊ะ|🪑;椅子|yǐzi|เก้าอี้|🪑
-"""),
-    ("การกระทำ", "🏃", """
-吃|chī|กิน|🍽️;喝|hē|ดื่ม|🥛;看|kàn|ดู|👀;听|tīng|ฟัง|👂;说|shuō|พูด|💬;走|zǒu|เดิน|🚶;跑|pǎo|วิ่ง|🏃;跳|tiào|กระโดด|🦘;坐|zuò|นั่ง|🧘;睡觉|shuìjiào|นอนหลับ|😴;玩|wán|เล่น|🧸
-"""),
-    ("ความรู้สึก", "😊", """
-开心|kāixīn|มีความสุข|😄;难过|nánguò|เศร้า|😢;生气|shēngqì|โกรธ|😠;害怕|hàipà|กลัว|😨;累|lèi|เหนื่อย|😮‍💨;饿|è|หิว|🍽️;渴|kě|กระหายน้ำ|💧
-"""),
-    ("ธรรมชาติ", "🌷", """
-太阳|tàiyáng|ดวงอาทิตย์|☀️;月亮|yuèliang|ดวงจันทร์|🌙;星星|xīngxing|ดาว|⭐;天空|tiānkōng|ท้องฟ้า|🌤️;云|yún|เมฆ|☁️;雨|yǔ|ฝน|🌧️;花|huā|ดอกไม้|🌷;树|shù|ต้นไม้|🌳
-"""),
-    ("โรงเรียน", "🏫", """
-学校|xuéxiào|โรงเรียน|🏫;老师|lǎoshī|คุณครู|👩‍🏫;学生|xuésheng|นักเรียน|🧑‍🎓;朋友|péngyou|เพื่อน|🧒;教室|jiàoshì|ห้องเรียน|🏫;书包|shūbāo|กระเป๋านักเรียน|🎒;铅笔|qiānbǐ|ดินสอ|✏️;橡皮|xiàngpí|ยางลบ|▰;尺子|chǐzi|ไม้บรรทัด|📏;书|shū|หนังสือ|📖;画画|huà huà|วาดรูป|🎨;唱歌|chàng gē|ร้องเพลง|🎵;洗手|xǐ shǒu|ล้างมือ|🧼;上学|shàng xué|ไปโรงเรียน|🏫
-"""),
-    ("ประโยคสั้น", "💬", """
-我爱妈妈。|Wǒ ài māma.|หนูรักแม่|💗;这是小猫。|Zhè shì xiǎo māo.|นี่คือแมวน้อย|🐱;我要喝水。|Wǒ yào hē shuǐ.|หนูอยากดื่มน้ำ|💧;我喜欢苹果。|Wǒ xǐhuan píngguǒ.|หนูชอบแอปเปิล|🍎;我很开心。|Wǒ hěn kāixīn.|หนูมีความสุข|😄;红色的球。|Hóngsè de qiú.|ลูกบอลสีแดง|🔴;谢谢妈妈！|Xièxie māma!|ขอบคุณแม่|🙏
-"""),
+    (
+        "Greetings",
+        "👋",
+        """
+你好|nǐ hǎo|Hello|👋
+再见|zài jiàn|Goodbye|👋
+谢谢|xièxie|Thank you|🙏
+不客气|bú kèqi|You're welcome|😊
+对不起|duìbuqǐ|Sorry|🙇
+没关系|méi guānxi|That's okay|🤗
+请|qǐng|Please|🤲
+        """,
+    ),
+    (
+        "Family",
+        "🏡",
+        """
+爸爸|bàba|Dad|👨
+妈妈|māma|Mom|👩
+哥哥|gēge|Big brother|👦
+姐姐|jiějie|Big sister|👧
+弟弟|dìdi|Little brother|👶
+妹妹|mèimei|Little sister|👶
+爷爷|yéye|Grandpa (Dad's dad)|👴
+奶奶|nǎinai|Grandma (Dad's mom)|👵
+外公|wàigōng|Grandpa (Mom's dad)|👴
+外婆|wàipó|Grandma (Mom's mom)|👵
+        """,
+    ),
+    (
+        "Numbers",
+        "🔢",
+        """
+一|yī|One|1️⃣
+二|èr|Two|2️⃣
+三|sān|Three|3️⃣
+四|sì|Four|4️⃣
+五|wǔ|Five|5️⃣
+六|liù|Six|6️⃣
+七|qī|Seven|7️⃣
+八|bā|Eight|8️⃣
+九|jiǔ|Nine|9️⃣
+十|shí|Ten|🔟
+        """,
+    ),
+    (
+        "Colors",
+        "🎨",
+        """
+红色|hóngsè|Red|🔴
+黄色|huángsè|Yellow|🟡
+蓝色|lánsè|Blue|🔵
+绿色|lǜsè|Green|🟢
+白色|báisè|White|⚪
+黑色|hēisè|Black|⚫
+粉色|fěnsè|Pink|🩷
+紫色|zǐsè|Purple|🟣
+橙色|chéngsè|Orange|🟠
+        """,
+    ),
+    (
+        "Body Parts",
+        "🖐️",
+        """
+头|tóu|Head|🧒
+头发|tóufa|Hair|👩
+眼睛|yǎnjing|Eyes|👀
+耳朵|ěrduo|Ears|👂
+鼻子|bízi|Nose|👃
+嘴巴|zuǐba|Mouth|👄
+手|shǒu|Hand|🖐️
+脚|jiǎo|Foot|🦶
+肚子|dùzi|Tummy|🧍
+        """,
+    ),
+    (
+        "Animals",
+        "🐰",
+        """
+狗|gǒu|Dog|🐶
+猫|māo|Cat|🐱
+兔子|tùzi|Rabbit|🐰
+鸟|niǎo|Bird|🐦
+鱼|yú|Fish|🐟
+鸭子|yāzi|Duck|🦆
+大象|dàxiàng|Elephant|🐘
+老虎|lǎohǔ|Tiger|🐯
+狮子|shīzi|Lion|🦁
+熊猫|xióngmāo|Panda|🐼
+        """,
+    ),
+    (
+        "Fruits",
+        "🍎",
+        """
+苹果|píngguǒ|Apple|🍎
+香蕉|xiāngjiāo|Banana|🍌
+西瓜|xīguā|Watermelon|🍉
+橙子|chéngzi|Orange|🍊
+葡萄|pútao|Grapes|🍇
+草莓|cǎoméi|Strawberry|🍓
+芒果|mángguǒ|Mango|🥭
+菠萝|bōluó|Pineapple|🍍
+        """,
+    ),
+    (
+        "Food & Drinks",
+        "🍚",
+        """
+饭|fàn|Rice|🍚
+面条|miàntiáo|Noodles|🍜
+面包|miànbāo|Bread|🍞
+鸡蛋|jīdàn|Egg|🥚
+牛奶|niúnǎi|Milk|🥛
+水|shuǐ|Water|💧
+果汁|guǒzhī|Juice|🧃
+糖果|tángguǒ|Candy|🍬
+蛋糕|dàngāo|Cake|🍰
+        """,
+    ),
+    (
+        "Toys & Things",
+        "🧸",
+        """
+玩具|wánjù|Toys|🧸
+球|qiú|Ball|⚽
+娃娃|wáwa|Doll|🪆
+积木|jīmù|Building blocks|🧱
+书|shū|Book|📖
+笔|bǐ|Pen or pencil|✏️
+书包|shūbāo|School bag|🎒
+桌子|zhuōzi|Table|🪑
+椅子|yǐzi|Chair|🪑
+        """,
+    ),
+    (
+        "Actions",
+        "🏃",
+        """
+吃|chī|Eat|🍽️
+喝|hē|Drink|🥛
+看|kàn|Look|👀
+听|tīng|Listen|👂
+说|shuō|Speak|💬
+走|zǒu|Walk|🚶
+跑|pǎo|Run|🏃
+跳|tiào|Jump|🦘
+坐|zuò|Sit|🧘
+睡觉|shuìjiào|Sleep|😴
+玩|wán|Play|🧸
+        """,
+    ),
+    (
+        "Feelings",
+        "😊",
+        """
+开心|kāixīn|Happy|😄
+难过|nánguò|Sad|😢
+生气|shēngqì|Angry|😠
+害怕|hàipà|Scared|😨
+累|lèi|Tired|😮‍💨
+饿|è|Hungry|🍽️
+渴|kě|Thirsty|💧
+        """,
+    ),
+    (
+        "Nature",
+        "🌷",
+        """
+太阳|tàiyáng|Sun|☀️
+月亮|yuèliang|Moon|🌙
+星星|xīngxing|Star|⭐
+天空|tiānkōng|Sky|🌤️
+云|yún|Cloud|☁️
+雨|yǔ|Rain|🌧️
+花|huā|Flower|🌷
+树|shù|Tree|🌳
+        """,
+    ),
+    (
+        "School",
+        "🏫",
+        """
+学校|xuéxiào|School|🏫
+老师|lǎoshī|Teacher|👩‍🏫
+学生|xuésheng|Student|🧑‍🎓
+朋友|péngyou|Friend|🧒
+教室|jiàoshì|Classroom|🏫
+书包|shūbāo|School bag|🎒
+铅笔|qiānbǐ|Pencil|✏️
+橡皮|xiàngpí|Eraser|▰
+尺子|chǐzi|Ruler|📏
+书|shū|Book|📖
+画画|huà huà|Draw|🎨
+唱歌|chàng gē|Sing|🎵
+洗手|xǐ shǒu|Wash hands|🧼
+上学|shàng xué|Go to school|🏫
+        """,
+    ),
+    (
+        "Short Sentences",
+        "💬",
+        """
+我爱妈妈。|Wǒ ài māma.|I love Mom.|💗
+这是小猫。|Zhè shì xiǎo māo.|This is a little cat.|🐱
+我要喝水。|Wǒ yào hē shuǐ.|I want to drink water.|💧
+我喜欢苹果。|Wǒ xǐhuan píngguǒ.|I like apples.|🍎
+我很开心。|Wǒ hěn kāixīn.|I am happy.|😄
+红色的球。|Hóngsè de qiú.|A red ball.|🔴
+谢谢妈妈！|Xièxie māma!|Thank you, Mom!|🙏
+        """,
+    ),
 ]
+
 
 categories = []
 
 for name, icon, text in CONTENT:
     items = []
 
-    for row in text.strip().split(";"):
-        zh, pinyin, th, picture = row.strip().split("|")
+    for row in text.strip().splitlines():
+        if not row.strip():
+            continue
+
+        chinese, pinyin, english, picture = row.strip().split("|")
 
         items.append({
-            "zh": zh,
+            "zh": chinese,
             "pinyin": pinyin,
-            "th": th,
+            "en": english,
             "icon": picture,
         })
 
@@ -77,8 +254,7 @@ for name, icon, text in CONTENT:
     })
 
 
-# ตรึงพื้นที่แอปเท่าความสูงหน้าจอ
-# ให้เลื่อนเฉพาะรายการคำศัพท์ด้านใน
+# The embedded app fills the screen and manages its own scrolling.
 st.markdown(
     """
     <style>
@@ -109,7 +285,7 @@ st.markdown(
 
 PAGE = r"""
 <!doctype html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -126,41 +302,50 @@ html, body {
 }
 
 body {
-    font-family: Tahoma, Arial, sans-serif;
+    font-family: Arial, sans-serif;
     color: #48525e;
     background: #fffdf8;
 }
 
+/* One scrolling area for navigation, settings, and vocabulary. */
 .app {
     height: 100vh;
     height: 100dvh;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    isolation: isolate;
+    scroll-padding-top: 66px;
+    -webkit-overflow-scrolling: touch;
 }
 
-header {
-    padding: 12px 16px 8px;
-    background: #fffdf8;
-    border-bottom: 1px solid #e6e2ec;
-}
-
+/* Only this small title bar stays visible. */
 .top {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    min-height: 56px;
+    padding: 8px 12px;
+    background: #fffdf8;
+    border-bottom: 1px solid #e6e2ec;
+    box-shadow: 0 2px 6px #00000005;
 }
 
 h1 {
-    font-size: 18px;
+    font-size: 15px;
     margin: 0;
     color: #8970a8;
-    line-height: 1.4;
+    line-height: 1.3;
 }
 
 h1 small {
     display: block;
-    font-size: 13px;
+    font-size: 11px;
+    margin-top: 2px;
     color: #558772;
     font-weight: normal;
 }
@@ -176,33 +361,44 @@ button {
 }
 
 button:focus-visible,
-select:focus-visible {
+select:focus-visible,
+summary:focus-visible {
     outline: 3px solid #766198;
     outline-offset: 2px;
 }
 
-.stop {
+.small-button {
     border: 0;
     border-radius: 12px;
     background: #ffe2d7;
-    padding: 10px 14px;
+    padding: 8px 10px;
+    min-height: 36px;
+    font-size: 12px;
     white-space: nowrap;
 }
 
+/* Category buttons stay in one horizontally scrollable row. */
 nav {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 6px;
-    padding-top: 10px;
+    margin: 0;
+    padding: 10px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 
 nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
     border: 1px solid transparent;
     border-radius: 20px;
-    padding: 8px 11px;
-    font-size: 13px;
-    background: #eee6f8;
+    padding: 7px 10px;
     min-height: 36px;
+    font-size: 12px;
+    background: #eee6f8;
 }
 
 nav button:nth-child(3n+2) {
@@ -215,36 +411,45 @@ nav button:nth-child(3n+3) {
 
 nav button[aria-pressed="true"] {
     border: 2px solid #796298;
-    padding: 7px 10px;
+    padding: 6px 9px;
     font-weight: bold;
 }
 
+.nav-hint {
+    margin: 0;
+    padding: 0 12px 5px;
+    font-size: 11px;
+    color: #728078;
+}
+
+/* Settings are part of the page, not a fixed panel. */
 details {
+    margin: 0;
+    padding: 0 12px;
     font-size: 12px;
-    margin-top: 8px;
-    max-height: 32vh;
-    overflow: auto;
 }
 
 summary {
     cursor: pointer;
-    padding: 5px 0;
+    padding: 8px 0;
 }
 
 .settings {
-    padding: 8px 0;
+    padding: 6px 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
 }
 
 select {
+    min-width: 0;
     max-width: 100%;
     padding: 8px;
     border: 1px solid #c9bbdc;
     border-radius: 10px;
     background: white;
+    font-size: 13px;
 }
 
 #voiceSelect {
@@ -253,21 +458,19 @@ select {
 
 #voiceNote {
     line-height: 1.6;
-    margin: 4px 0;
+    margin: 5px 0;
 }
 
 #status {
+    margin: 0;
+    padding: 6px 12px 10px;
     font-size: 12px;
     line-height: 1.5;
-    margin: 6px 0 0;
-    min-height: 18px;
 }
 
+/* No separate scroll container inside the vocabulary area. */
 main {
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 18px;
-    min-height: 0;
+    padding: 12px;
 }
 
 .content {
@@ -277,12 +480,13 @@ main {
 
 h2 {
     font-size: 21px;
-    margin: 0 0 4px;
+    margin: 0 0 5px;
 }
 
 .hint {
     font-size: 13px;
-    margin: 0 0 16px;
+    margin: 0 0 14px;
+    line-height: 1.5;
 }
 
 .cards {
@@ -323,6 +527,7 @@ h2 {
 }
 
 .picture {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
     font-size: 58px;
     margin-bottom: 12px;
 }
@@ -334,13 +539,13 @@ h2 {
 }
 
 .pinyin {
-    font: 17px Arial, sans-serif;
+    font-size: 17px;
     margin: 8px 0;
 }
 
-.th {
-    font-size: 17px;
-    line-height: 1.6;
+.english {
+    font-size: 18px;
+    line-height: 1.5;
 }
 
 .listen {
@@ -351,94 +556,118 @@ h2 {
 
 footer {
     text-align: center;
-    padding: 24px 0 8px;
+    padding: 24px 0 30px;
     font-size: 13px;
     color: #647969;
 }
 
 @media (max-width: 540px) {
-    header {
-        padding: 10px 10px 6px;
-    }
-
-    h1 {
-        font-size: 16px;
-    }
-
-    nav {
-        gap: 5px;
-    }
-
-    nav button {
-        font-size: 12px;
-        padding: 7px 9px;
-    }
-
-    nav button[aria-pressed="true"] {
-        padding: 6px 8px;
-    }
-
-    main {
-        padding: 14px 10px;
-    }
-
     .cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
     }
 
+    .card {
+        padding: 16px 8px;
+    }
+
     .picture {
-        font-size: 48px;
+        font-size: 46px;
     }
 
     .zh {
-        font-size: 27px;
+        font-size: 28px;
     }
 
-    .pinyin, .th {
+    .pinyin, .english {
         font-size: 15px;
     }
+}/* Keep the compact title bar fixed at a predictable height. */
+.top {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: 56px;
+    min-height: 56px;
+}
+
+/* Keep the horizontally scrollable navigation below the title. */
+#nav {
+    position: sticky;
+    top: 56px;
+    z-index: 29;
+
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+
+    margin: 0;
+    padding: 8px 12px;
+    background: #fffdf8;
+    border-bottom: 1px solid #e6e2ec;
+    box-shadow: 0 3px 6px #00000006;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+#nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* Leave room for both sticky bars when scrolling to content. */
+.app {
+    scroll-padding-top: 120px;
 }
 </style>
 </head>
 
 <body>
-<div class="app">
+<div class="app" id="app">
 
-<header>
     <div class="top">
         <h1>
             🐰 Myra &amp; Matthew
             <small>learning Chinese</small>
         </h1>
 
-        <button class="stop" id="stop">
-            ⏹ หยุดเสียง
+        <button class="small-button" id="stop">
+            ⏹ Stop
         </button>
     </div>
 
-    <nav id="nav" aria-label="หมวดคำศัพท์"></nav>
+    <nav id="nav" aria-label="Vocabulary categories"></nav>
+
+    <p class="nav-hint">
+        Swipe the categories left or right ↔
+    </p>
 
     <details id="settings">
-        <summary>⚙️ ตั้งค่าเสียง</summary>
+        <summary>⚙️ Voice settings</summary>
 
         <div class="settings">
-            <label for="voiceSelect">เสียงจีน</label>
+            <label for="voiceSelect">Chinese voice</label>
             <select id="voiceSelect"></select>
 
-            <label for="speed">ความเร็ว</label>
+            <label for="speed">Speed</label>
             <select id="speed">
-                <option value="0.65">ช้า</option>
-                <option value="0.8" selected>ช้าปานกลาง</option>
-                <option value="1">ปกติ</option>
+                <option value="0.65">Slow</option>
+                <option value="0.8" selected>Gentle</option>
+                <option value="1">Normal</option>
             </select>
 
-            <button class="stop" id="testVoice">
-                ทดสอบเสียง
+            <button class="small-button" id="testVoice">
+                Test voice
             </button>
 
-            <button class="stop" id="refreshVoices">
-                โหลดรายชื่อเสียงใหม่
+            <button class="small-button" id="refreshVoices">
+                Refresh voices
+            </button>
+
+            <button class="small-button" id="closeSettings">
+                Done
             </button>
         </div>
 
@@ -446,25 +675,24 @@ footer {
     </details>
 
     <p id="status" role="status" aria-live="polite">
-        แตะภาพเพื่อฟังภาษาจีน
+        Tap a picture to hear Chinese.
     </p>
-</header>
 
-<main id="scrollArea">
-    <div class="content">
-        <h2 id="heading"></h2>
+    <main>
+        <div class="content">
+            <h2 id="heading"></h2>
 
-        <p class="hint">
-            แตะภาพเพื่อฟัง แล้วพูดภาษาจีนตามได้เลย
-        </p>
+            <p class="hint">
+                Tap a picture. Listen. Say it with Bunny!
+            </p>
 
-        <div id="cards" class="cards"></div>
+            <div id="cards" class="cards"></div>
 
-        <footer>
-            🌷 เรียนวันละนิดกับกระต่ายน้อย 🌷
-        </footer>
-    </div>
-</main>
+            <footer>
+                🌷 A little Chinese, a little joy, every day! 🌷
+            </footer>
+        </div>
+    </main>
 
 </div>
 
@@ -481,10 +709,12 @@ let savedVoice = "";
 
 try {
     savedVoice = localStorage.getItem("bunnyChineseVoice") || "";
-} catch (e) {}
+} catch (error) {
+    // Browser storage is optional.
+}
 
 
-// เลือกเฉพาะเสียงจีนกลาง ไม่เลือกเสียงไทยหรือกวางตุ้ง
+// Include Mandarin voices and exclude Cantonese voices.
 function isMandarin(voice) {
     const lang = voice.lang.replaceAll("_", "-").toLowerCase();
 
@@ -493,7 +723,7 @@ function isMandarin(voice) {
 }
 
 
-// เสียงผู้หญิงที่รู้จัก ให้เลือกก่อนเสียงอื่น
+// Prefer recognized female voices.
 function knownFemale(voice) {
     return /xiaoxiao|xiaoyi|huihui|yaoyao|ting[- ]?ting|mei[- ]?jia|li[- ]?li/i
         .test(voice.name);
@@ -505,12 +735,12 @@ function loadVoices() {
     const previous = select.value || savedVoice;
 
     select.replaceChildren(
-        new Option("เลือกเสียงจีน…", "")
+        new Option("Choose a Chinese voice…", "")
     );
 
     if (!synth) {
         $("voiceNote").textContent =
-            "เบราว์เซอร์นี้ไม่รองรับเสียงอ่าน ลองเปิดด้วย Edge หรือ Chrome";
+            "Speech is not supported in this browser. Try Edge or Chrome.";
         return;
     }
 
@@ -530,16 +760,23 @@ function loadVoices() {
     }
 
     const chosen =
-        voices.find(v => v.voiceURI === previous)
+        voices.find(voice => voice.voiceURI === previous)
         || voices.find(knownFemale);
 
     if (chosen) {
         select.value = chosen.voiceURI;
     }
 
-    $("voiceNote").textContent = !voices.length
-        ? "ยังไม่พบเสียงจีนกลาง ลองโหลดรายชื่อเสียงใหม่ หากยังไม่มี ให้เพิ่มเสียงจีนกลางในเครื่องแล้วเปิดเบราว์เซอร์ใหม่"
-        : "เลือกเสียงผู้หญิง เช่น Xiaoxiao, Huihui หรือ Tingting แล้วกดทดสอบเสียง";
+    if (!voices.length) {
+        $("voiceNote").textContent =
+            "No Mandarin voice was found. Try Refresh voices. "
+            + "If none appear, add a Mandarin voice to your device "
+            + "and restart your browser.";
+    } else {
+        $("voiceNote").textContent =
+            "For a female voice, look for Xiaoxiao, Huihui, or Tingting. "
+            + "Available voices depend on your device.";
+    }
 }
 
 
@@ -559,37 +796,44 @@ function stopSpeech() {
 }
 
 
-function speak(zh, card = null) {
+function openVoiceSettings() {
+    $("settings").open = true;
+    $("app").scrollTop = 0;
+}
+
+
+function speak(chinese, card = null) {
     stopSpeech();
 
     if (!synth || !window.SpeechSynthesisUtterance) {
         $("status").textContent =
-            "เบราว์เซอร์นี้ไม่รองรับเสียงอ่าน";
-        $("settings").open = true;
+            "This browser does not support speech.";
+        openVoiceSettings();
         return;
     }
 
     loadVoices();
 
     const voice = voices.find(
-        v => v.voiceURI === $("voiceSelect").value
+        item => item.voiceURI === $("voiceSelect").value
     );
 
     if (!voice) {
         $("status").textContent =
-            "กรุณาเลือกเสียงจีนในตั้งค่าเสียงก่อน แล้วแตะภาพอีกครั้ง";
-        $("settings").open = true;
+            "Please choose a Chinese voice, then tap the picture again.";
+        openVoiceSettings();
         return;
     }
 
     const current = token;
 
-    // ส่งเฉพาะคำภาษาจีนไปอ่าน
-    utterance = new SpeechSynthesisUtterance(zh);
+    // Speak Chinese only.
+    utterance = new SpeechSynthesisUtterance(chinese);
     utterance.lang = voice.lang;
     utterance.voice = voice;
     utterance.rate = Number($("speed").value);
     utterance.pitch = 1;
+    utterance.volume = 1;
 
     activeCard = card;
 
@@ -597,7 +841,7 @@ function speak(zh, card = null) {
         card.classList.add("active");
     }
 
-    $("status").textContent = "🔊 " + zh;
+    $("status").textContent = "🔊 " + chinese;
 
     const finish = message => {
         if (current !== token) {
@@ -614,31 +858,38 @@ function speak(zh, card = null) {
     };
 
     utterance.onend = () => {
-        finish("⭐ เก่งมาก! แตะฟังซ้ำหรือเลือกคำต่อไป");
+        finish("⭐ Great job! Tap again or choose another word.");
     };
 
     utterance.onerror = () => {
+        if (current !== token) {
+            return;
+        }
+
         finish(
-            "เล่นเสียงไม่ได้ ลองเลือกเสียงจีนอื่นในตั้งค่าเสียงแล้วแตะอีกครั้ง"
+            "The voice could not play. Try another voice in Voice settings."
         );
+
+        openVoiceSettings();
     };
 
     try {
         synth.speak(utterance);
-    } catch (e) {
-        finish("เปิดเสียงไม่ได้ กรุณาตรวจสอบตั้งค่าเสียง");
+    } catch (error) {
+        finish("Could not start speech. Please check Voice settings.");
+        openVoiceSettings();
     }
 }
 
 
-function addText(parent, text, className, lang) {
+function addText(parent, text, className, language) {
     const span = document.createElement("span");
 
     span.textContent = text;
     span.className = className;
 
-    if (lang) {
-        span.lang = lang;
+    if (language) {
+        span.lang = language;
     }
 
     parent.appendChild(span);
@@ -653,14 +904,15 @@ function showCategory(index) {
     $("heading").textContent =
         category.icon + " " + category.name;
 
-    $("status").textContent = "แตะภาพเพื่อฟังภาษาจีน";
+    $("status").textContent =
+        "Tap a picture to hear Chinese.";
 
     $("cards").replaceChildren();
 
-    [...$("nav").children].forEach((button, i) => {
+    [...$("nav").children].forEach((button, buttonIndex) => {
         button.setAttribute(
             "aria-pressed",
-            String(i === index)
+            String(buttonIndex === index)
         );
     });
 
@@ -671,14 +923,14 @@ function showCategory(index) {
 
         button.setAttribute(
             "aria-label",
-            "ฟัง " + word.zh + " " + word.th
+            "Hear " + word.en + " in Chinese"
         );
 
         addText(button, word.icon, "picture");
         addText(button, word.zh, "zh", "zh-CN");
         addText(button, word.pinyin, "pinyin");
-        addText(button, word.th, "th", "th");
-        addText(button, "🔊 แตะเพื่อฟัง", "listen");
+        addText(button, word.en, "english", "en");
+        addText(button, "🔊 Tap to listen", "listen");
 
         button.onclick = () => {
             speak(word.zh, button);
@@ -687,11 +939,13 @@ function showCategory(index) {
         $("cards").appendChild(button);
     });
 
-    $("scrollArea").scrollTop = 0;
+    // Collapse settings when switching categories.
+    $("settings").open = false;
+    $("app").scrollTop = 0;
 }
 
 
-// สร้างปุ่ม navigation ขนาดเล็ก
+// Build compact navigation buttons.
 DATA.forEach((category, index) => {
     const button = document.createElement("button");
 
@@ -708,7 +962,9 @@ DATA.forEach((category, index) => {
 
 $("stop").onclick = () => {
     stopSpeech();
-    $("status").textContent = "หยุดเสียงแล้ว";
+
+    $("status").textContent =
+        "Stopped. Tap a picture to listen again.";
 };
 
 
@@ -722,7 +978,12 @@ $("voiceSelect").onchange = () => {
             "bunnyChineseVoice",
             savedVoice
         );
-    } catch (e) {}
+    } catch (error) {
+        // Voice selection still works without browser storage.
+    }
+
+    $("status").textContent =
+        "Voice changed. Tap Test voice or Done.";
 };
 
 
@@ -732,6 +993,11 @@ $("testVoice").onclick = () => {
 
 
 $("refreshVoices").onclick = loadVoices;
+
+
+$("closeSettings").onclick = () => {
+    $("settings").open = false;
+};
 
 
 if (synth) {
@@ -747,7 +1013,7 @@ loadVoices();
 </html>
 """
 
-# ป้องกันข้อมูลถูกตีความเป็นแท็ก HTML ในสคริปต์
+
 payload = json.dumps(
     categories,
     ensure_ascii=False,
