@@ -254,7 +254,7 @@ for name, icon, text in CONTENT:
     })
 
 
-# The embedded app fills the screen and manages its own scrolling.
+# Make the embedded app fill the screen on phones and tablets.
 st.markdown(
     """
     <style>
@@ -264,15 +264,26 @@ st.markdown(
 
     [data-testid="stAppViewContainer"],
     [data-testid="stMain"] {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
         overflow: hidden !important;
+        background: #fffdf8 !important;
     }
 
     .block-container {
+        height: 100dvh !important;
         padding: 0 !important;
         max-width: 100% !important;
     }
 
+    .element-container:has(
+        iframe[title="streamlit.components.v1.html"]
+    ) {
+        height: 100dvh !important;
+    }
+
     iframe[title="streamlit.components.v1.html"] {
+        display: block;
         width: 100% !important;
         height: 100dvh !important;
         border: 0;
@@ -295,11 +306,13 @@ PAGE = r"""
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     margin: 0;
+    width: 100%;
     height: 100%;
     overflow: hidden;
-}
+}}
 
 body {
     font-family: Arial, sans-serif;
@@ -309,13 +322,15 @@ body {
 
 /* One scrolling area for navigation, settings, and vocabulary. */
 .app {
+    width: 100%;
     height: 100vh;
     height: 100dvh;
-    overflow-y: auto;
     overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     position: relative;
     isolation: isolate;
-    scroll-padding-top: 66px;
+    scroll-padding-top: 120px;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -1033,6 +1048,6 @@ payload = json.dumps(
 
 components.html(
     PAGE.replace("__DATA__", payload),
-    height=1200,
+    height=900,
     scrolling=False,
 )
